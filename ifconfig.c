@@ -24,10 +24,12 @@ int main(int argc, char const *argv[])
 			const int family_size = family == AF_INET ? 
 				sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
 			getnameinfo(address->ifa_addr, family_size, ap, sizeof(ap), 0, 0, NI_NUMERICHOST);
-			
+
 			printf("\t%s\n", ap);
 		}
 	}
+
+	freeifaddrs(addresses);
 
 	return 0;
 }
