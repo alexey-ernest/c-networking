@@ -4,6 +4,9 @@
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
 #endif
+#if !defined(IPV6_V6ONLY)
+#define IPV6_V6ONLY 27
+#endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
@@ -48,7 +51,7 @@ int main(int argc, char const *argv[])
 	printf("Configuring local address...\n");
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;			/* IPv4 */
+	hints.ai_family = AF_INET6;			/* IPv6 by default */
 	hints.ai_socktype = SOCK_STREAM;	/* TCP */
 	hints.ai_flags = AI_PASSIVE;		/* bind to the wildcard address */
 
@@ -62,6 +65,14 @@ int main(int argc, char const *argv[])
 		bind_address->ai_socktype, bind_address->ai_protocol);
 	if (!ISAVALIDSOCKET(socket_listen)) {
 		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		return 1;
+	}
+
+	/* clear IPV6_V6ONLY flag on the socket to enable dual-stack sockets (IPv4 & IPv6) */
+	int option = 0;
+	if (setsockopt(socket_listen, IPPROTO_IPV6, IPV6_V6ONLY, 
+		(void*) &option, sizeof(option))) {
+		fprintf(stderr, "setsocket() failed. (%d)\n", GETSOCKETERRNO());
 		return 1;
 	}
 
